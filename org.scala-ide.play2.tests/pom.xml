@@ -8,6 +8,18 @@
   <artifactId>org.scala-ide.play2.tests</artifactId>
   <packaging>eclipse-test-plugin</packaging>
 
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.9.0</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
@@ -19,6 +31,29 @@
           <testClass>org.scalaide.play2.RouteTestSuite</testClass>
           <testClass>org.scalaide.play2.TemplateTestSuite</testClass>
         </configuration>
+      </plugin>
+      <plugin>
+        <!-- copy the mockito jar, so it can be used in eclipse -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+        <execution>
+            <id>copy</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.mockito</groupId>
+                  <artifactId>mockito-all</artifactId>
+                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

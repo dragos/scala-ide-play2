@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output=".target" path="app"/>
+	<classpathentry kind="src" output=".target" path="test"/>
+	<classpathentry kind="src" path="target/scala-2.9.1/src_managed/main"/>
+	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
+	<classpathentry kind="lib" path="../../../org.scala-ide.play2/target/lib/play_2.9.1.jar"/>
+	<classpathentry kind="lib" path="../../../org.scala-ide.play2/target/lib/templates_2.9.1.jar"/>
+	<classpathentry kind="lib" path="../../../org.scala-ide.play2/target/lib/scala-io-file_2.9.1.jar"/>
+	<classpathentry kind="lib" path="../../../org.scala-ide.play2/target/lib/scala-io-core_2.9.1.jar"/>
+	<classpathentry kind="lib" path="../../../org.scala-ide.play2/target/lib/scala-arm_2.9.1.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

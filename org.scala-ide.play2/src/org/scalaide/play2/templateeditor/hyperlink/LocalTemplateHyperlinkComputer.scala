@@ -27,45 +27,19 @@ class LocalTemplateHyperlinkComputer extends AbstractHyperlinkDetector {
   }
 
   final def detectHyperlinks(textEditor: ITextEditor, currentSelection: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
-    def findHyperlinks(icu: TemplateCompilationUnit): List[IHyperlink] = {
-      val input = textEditor.getEditorInput
-      val doc = textEditor.getDocumentProvider.getDocument(input)
-      if (!doc.getContentType(currentSelection.getOffset()).equals(TemplatePartitions.TEMPLATE_SCALA)) {
-        return Nil // should not be null, if it was null, it would throw an exception
-      }
-      if (doc.getChar(currentSelection.getOffset()) == '.') // otherwise it will generate an error
-        return Nil
-
-      val wordRegion = ScalaWordFinder.findWord(doc.get, currentSelection.getOffset).asInstanceOf[IRegion]
-      val mappedRegion = icu.mapTemplateToScalaRegion(wordRegion)
-      icu.withSourceFile { (source, compiler) =>
-        import compiler._
-        def localSymbol(sym: compiler.Symbol): Boolean = (
-          (sym ne null) &&
-          (sym ne NoSymbol) &&
-          sym.pos.isDefined &&
-          sym.pos.source == source)
-
-        val pos = compiler.rangePos(source, mappedRegion.getOffset(), mappedRegion.getOffset(), mappedRegion.getOffset() + mappedRegion.getLength())
-        val response = new Response[Tree]
-        compiler.askTypeAt(pos, response)
-        response.get match {
-          case Left(tree: Tree) if localSymbol(tree.symbol) =>
-            val sym = tree.symbol
-            val offset = icu.templateOffset(sym.pos.startOrPoint)
-            val hyper = Hyperlink.withText(sym.name.toString)(icu, offset, sym.name.length, sym.kindString + sym.nameString, wordRegion)
-            List(hyper)
-          case _ => Nil
-        }
-      }(Nil)
-    }
-
     if (textEditor == null) null // can be null if generated through ScalaPreviewerFactory
     else {
+      val input = textEditor.getEditorInput
+      val doc = textEditor.getDocumentProvider.getDocument(input)
+      if (!doc.getContentType(currentSelection.getOffset()).equals(TemplatePartitions.TEMPLATE_SCALA)
+          || (doc.getChar(currentSelection.getOffset()) == '.')) // otherwise it will generate an error
+        return null
+
       EditorUtils.getEditorCompilationUnit(textEditor) match {
         case Some(scu: TemplateCompilationUnit) =>
 
-          findHyperlinks(scu) match {
+          val wordRegion = ScalaWordFinder.findWord(doc.get, currentSelection.getOffset).asInstanceOf[IRegion]
+          findHyperlinks(scu, wordRegion) match {
             // I know you will be tempted to remove this, but don't do it, JDT expects null when no hyperlinks are found.
             case Nil => null
             case links =>
@@ -76,5 +50,29 @@ class LocalTemplateHyperlinkComputer extends AbstractHyperlinkDetector {
         case _ => null
       }
     }
+  }
+
+  def findHyperlinks(icu: TemplateCompilationUnit, wordRegion: IRegion): List[IHyperlink] = {
+    val mappedRegion = icu.mapTemplateToScalaRegion(wordRegion)
+    icu.withSourceFile { (source, compiler) =>
+      import compiler._
+      def localSymbol(sym: compiler.Symbol): Boolean = (
+        (sym ne null) &&
+        (sym ne NoSymbol) &&
+        sym.pos.isDefined &&
+        sym.pos.source == source)
+
+      val pos = compiler.rangePos(source, mappedRegion.getOffset(), mappedRegion.getOffset(), mappedRegion.getOffset() + mappedRegion.getLength())
+      val response = new Response[Tree]
+      compiler.askTypeAt(pos, response)
+      response.get match {
+        case Left(tree: Tree) if localSymbol(tree.symbol) =>
+          val sym = tree.symbol
+          val offset = icu.templateOffset(sym.pos.startOrPoint)
+          val hyper = Hyperlink.withText(sym.name.toString)(icu, offset, sym.name.length, sym.kindString + sym.nameString, wordRegion)
+          List(hyper)
+        case _ => Nil
+      }
+    }(Nil)
   }
 }
